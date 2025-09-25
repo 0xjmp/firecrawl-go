@@ -34,7 +34,7 @@ func (s *StringOrStringSlice) UnmarshalJSON(data []byte) error {
 type FirecrawlDocumentMetadata struct {
 	Title             *string              `json:"title,omitempty"`
 	Description       *StringOrStringSlice `json:"description,omitempty"`
-	Language          *string              `json:"language,omitempty"`
+	Language          *StringOrStringSlice `json:"language,omitempty"`
 	Keywords          *StringOrStringSlice `json:"keywords,omitempty"`
 	Robots            *StringOrStringSlice `json:"robots,omitempty"`
 	OGTitle           *StringOrStringSlice `json:"ogTitle,omitempty"`

@@ -144,6 +144,96 @@ type CancelCrawlJobResponse struct {
 	Status  string `json:"status"`
 }
 
+// WebhookSpec represents a webhook specification
+type WebhookSpec struct {
+	URL      string            `json:"url"`
+	Headers  map[string]string `json:"headers,omitempty"`
+	Metadata map[string]any    `json:"metadata,omitempty"`
+	Events   []string          `json:"events,omitempty"`
+}
+
+// FormatSpec represents a format specification
+type FormatSpec struct {
+	Type     string         `json:"type"`
+	FullPage *bool          `json:"fullPage,omitempty"`
+	Quality  *int           `json:"quality,omitempty"`
+	Viewport *Viewport      `json:"viewport,omitempty"`
+	Schema   map[string]any `json:"schema,omitempty"`
+	Prompt   *string        `json:"prompt,omitempty"`
+	Modes    []string       `json:"modes,omitempty"`
+	Tag      *string        `json:"tag,omitempty"`
+}
+
+// Viewport represents viewport dimensions
+type Viewport struct {
+	Width  int `json:"width"`
+	Height int `json:"height"`
+}
+
+// ParserSpec represents a parser specification
+type ParserSpec struct {
+	Type     string `json:"type"`
+	MaxPages *int   `json:"maxPages,omitempty"`
+}
+
+// ActionSpec represents an action specification
+type ActionSpec struct {
+	Type         string    `json:"type"`
+	Milliseconds *int      `json:"milliseconds,omitempty"`
+	Selector     *string   `json:"selector,omitempty"`
+	FullPage     *bool     `json:"fullPage,omitempty"`
+	Quality      *int      `json:"quality,omitempty"`
+	Viewport     *Viewport `json:"viewport,omitempty"`
+	All          *bool     `json:"all,omitempty"`
+	Text         *string   `json:"text,omitempty"`
+	Key          *string   `json:"key,omitempty"`
+	Direction    *string   `json:"direction,omitempty"`
+	Script       *string   `json:"script,omitempty"`
+	Format       *string   `json:"format,omitempty"`
+	Landscape    *bool     `json:"landscape,omitempty"`
+	Scale        *float64  `json:"scale,omitempty"`
+}
+
+// LocationSpec represents location settings
+type LocationSpec struct {
+	Country   *string  `json:"country,omitempty"`
+	Languages []string `json:"languages,omitempty"`
+}
+
+// BatchScrapeParams represents the parameters for a batch scrape request
+type BatchScrapeParams struct {
+	URLs                []string          `json:"urls"`
+	Webhook             *WebhookSpec      `json:"webhook,omitempty"`
+	MaxConcurrency      *int              `json:"maxConcurrency,omitempty"`
+	IgnoreInvalidURLs   *bool             `json:"ignoreInvalidURLs,omitempty"`
+	Formats             []interface{}     `json:"formats,omitempty"`
+	OnlyMainContent     *bool             `json:"onlyMainContent,omitempty"`
+	IncludeTags         []string          `json:"includeTags,omitempty"`
+	ExcludeTags         []string          `json:"excludeTags,omitempty"`
+	MaxAge              *int              `json:"maxAge,omitempty"`
+	Headers             map[string]string `json:"headers,omitempty"`
+	WaitFor             *int              `json:"waitFor,omitempty"`
+	Mobile              *bool             `json:"mobile,omitempty"`
+	SkipTlsVerification *bool             `json:"skipTlsVerification,omitempty"`
+	Timeout             *int              `json:"timeout,omitempty"`
+	Parsers             []interface{}     `json:"parsers,omitempty"`
+	Actions             []ActionSpec      `json:"actions,omitempty"`
+	Location            *LocationSpec     `json:"location,omitempty"`
+	RemoveBase64Images  *bool             `json:"removeBase64Images,omitempty"`
+	BlockAds            *bool             `json:"blockAds,omitempty"`
+	Proxy               *string           `json:"proxy,omitempty"`
+	StoreInCache        *bool             `json:"storeInCache,omitempty"`
+	ZeroDataRetention   *bool             `json:"zeroDataRetention,omitempty"`
+}
+
+// BatchScrapeResponse represents the response for batch scrape operations
+type BatchScrapeResponse struct {
+	Success     bool     `json:"success"`
+	ID          string   `json:"id"`
+	URL         string   `json:"url"`
+	InvalidURLs []string `json:"invalidURLs,omitempty"`
+}
+
 // MapParams represents the parameters for a map request.
 type MapParams struct {
 	IncludeSubdomains *bool   `json:"includeSubdomains,omitempty"`
@@ -624,6 +714,114 @@ func (app *FirecrawlApp) MapURL(url string, params *MapParams) (*MapResponse, er
 	} else {
 		return nil, fmt.Errorf("map operation failed: %s", mapResponse.Error)
 	}
+}
+
+// BatchScrape starts a batch scrape job for the specified URLs using the Firecrawl API.
+//
+// Parameters:
+//   - params: Parameters for the batch scrape request, including URLs and optional configuration.
+//
+// Returns:
+//   - *BatchScrapeResponse: The batch scrape response with job ID and URL.
+//   - error: An error if the batch scrape request fails.
+func (app *FirecrawlApp) BatchScrape(params *BatchScrapeParams) (*BatchScrapeResponse, error) {
+	if params == nil || len(params.URLs) == 0 {
+		return nil, fmt.Errorf("urls are required")
+	}
+
+	headers := app.prepareHeaders(nil)
+	batchBody := map[string]any{
+		"urls": params.URLs,
+	}
+
+	if params.Webhook != nil {
+		batchBody["webhook"] = params.Webhook
+	}
+	if params.MaxConcurrency != nil {
+		batchBody["maxConcurrency"] = params.MaxConcurrency
+	}
+	if params.IgnoreInvalidURLs != nil {
+		batchBody["ignoreInvalidURLs"] = params.IgnoreInvalidURLs
+	}
+	if params.Formats != nil {
+		batchBody["formats"] = params.Formats
+	}
+	if params.OnlyMainContent != nil {
+		batchBody["onlyMainContent"] = params.OnlyMainContent
+	}
+	if params.IncludeTags != nil {
+		batchBody["includeTags"] = params.IncludeTags
+	}
+	if params.ExcludeTags != nil {
+		batchBody["excludeTags"] = params.ExcludeTags
+	}
+	if params.MaxAge != nil {
+		batchBody["maxAge"] = params.MaxAge
+	}
+	if params.Headers != nil {
+		batchBody["headers"] = params.Headers
+	}
+	if params.WaitFor != nil {
+		batchBody["waitFor"] = params.WaitFor
+	}
+	if params.Mobile != nil {
+		batchBody["mobile"] = params.Mobile
+	}
+	if params.SkipTlsVerification != nil {
+		batchBody["skipTlsVerification"] = params.SkipTlsVerification
+	}
+	if params.Timeout != nil {
+		batchBody["timeout"] = params.Timeout
+	}
+	if params.Parsers != nil {
+		batchBody["parsers"] = params.Parsers
+	}
+	if params.Actions != nil {
+		batchBody["actions"] = params.Actions
+	}
+	if params.Location != nil {
+		batchBody["location"] = params.Location
+	}
+	if params.RemoveBase64Images != nil {
+		batchBody["removeBase64Images"] = params.RemoveBase64Images
+	}
+	if params.BlockAds != nil {
+		batchBody["blockAds"] = params.BlockAds
+	}
+	if params.Proxy != nil {
+		batchBody["proxy"] = params.Proxy
+	}
+	if params.StoreInCache != nil {
+		batchBody["storeInCache"] = params.StoreInCache
+	}
+	if params.ZeroDataRetention != nil {
+		batchBody["zeroDataRetention"] = params.ZeroDataRetention
+	}
+
+	resp, err := app.makeRequest(
+		http.MethodPost,
+		fmt.Sprintf("%s/v2/batch/scrape", app.APIURL),
+		batchBody,
+		headers,
+		"start batch scrape",
+		withRetries(3),
+		withBackoff(500),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var batchResponse BatchScrapeResponse
+	err = json.Unmarshal(resp, &batchResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	if !batchResponse.Success {
+		return nil, fmt.Errorf("failed to start batch scrape")
+	}
+
+	return &batchResponse, nil
 }
 
 // SearchURL searches for a URL using the Firecrawl API.

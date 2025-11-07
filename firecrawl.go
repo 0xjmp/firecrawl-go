@@ -698,7 +698,7 @@ func (app *FirecrawlApp) makeRequest(method, url string, data map[string]any, he
 		}
 		defer resp.Body.Close()
 
-		if resp.StatusCode != 502 {
+		if resp.StatusCode != 502 && resp.StatusCode != 503 {
 			break
 		}
 
@@ -821,12 +821,18 @@ func (app *FirecrawlApp) handleError(statusCode int, body []byte, action string)
 
 	var message string
 	switch statusCode {
+	case 401:
+		message = fmt.Sprintf("Unauthorized: Failed to %s. %s", action, errorMessage)
 	case 402:
 		message = fmt.Sprintf("Payment Required: Failed to %s. %s", action, errorMessage)
+	case 403:
+		message = fmt.Sprintf("Forbidden: Failed to %s. %s", action, errorMessage)
 	case 408:
 		message = fmt.Sprintf("Request Timeout: Failed to %s as the request timed out. %s", action, errorMessage)
 	case 409:
 		message = fmt.Sprintf("Conflict: Failed to %s due to a conflict. %s", action, errorMessage)
+	case 429:
+		message = fmt.Sprintf("Too Many Requests: Failed to %s. %s", action, errorMessage)
 	case 500:
 		message = fmt.Sprintf("Internal Server Error: Failed to %s. %s", action, errorMessage)
 	default:
